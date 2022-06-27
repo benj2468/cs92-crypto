@@ -1,0 +1,261 @@
+
+
+
+
+
+
+
+
+
+
+CryptoPass
+(Work in Progress)
+
+Abstract	3
+Introduction	3
+Background	4
+Research	4
+Technologies	5
+Documentation	5
+Component Analysis	5
+Client	6
+Trust Analysis	6
+Security Analysis	7
+Incentive Analysis (Proposal)	7
+Server	8
+Trust Analysis	8
+Security Analysis	9
+Incentive Analysis (Proposal)	9
+Technical Description	10
+Server(s) (simple-syrup)	10
+Client (cryptopass)	10
+All Together	11
+V3.0	11
+Contract Reconstruction	12
+Limitations	13
+Acknowledgments	13
+
+
+Benjamin Cape
+Apr 7, 2022
+CryptoPass
+On Decentralized Recovery Methods
+Abstract
+Password recovery methods have been implemented in various different modes and through various methods. Different companies provide methods to recover passwords, secure notes, and other personal information. These companies sometimes use proprietary technology to store data and might expose data to hackers, leaks, or downtime due to two factors: pervasiveness and security. These two principles, through traditional implementations, oppose each other. With a more pervasive system, a user's data is spread across many different locations, and therefore might be more expensive to keep secure. A pervasive system might also increase the likelihood that a hacker can find a particular location to target. On the other hand, security is expensive, both time-wise and resource-wise. Limiting your system’s pervasiveness in hopes of instituting higher security on a smaller lot might increase the likelihood of a DoS attack, or even DoS due to server-down-time. When secret data includes access to funds, necessary codes, or even production data, we need to find a balance between pervasiveness and security to ensure user’s data is always available when the user needs it. Through this project, we have designed a system that attempts to find such a balance. We have designed a framework for developing authentication servers, and in conjunction with Shamir’s Secret sharing have devised a method to share secret information across any number of authentication servers to ensure a healthy balance of pervasiveness and security.
+
+That was our phase one (V1.0). Phase two(V2.) utilizes the framework built in V1.0 to develop a virtual wallet within the blockchain that is secured via multi-factor, use-specifided, and distribut
+
+Introduction
+The intuition behind building CryptoPass🛡️ was to remove the single-source-of-trust necessary for using particular password protection software. LastPass, OnePassword, etc, currently use proprietary technology and require that you trust the company to not be nefarious with your data. Sometimes this works, but in cases where individuals are incredibly pessimistic or suspicious, these solutions do not always live up to the standards of trust they hold. With CryptoPass🛡️, we have designed a technique in which user’s need not place their trust in a single entity to store their information. Rather, the user can selectively trust a variable number of entities, distribute their trust across those groups, and still recover data. CryptoPass🛡️ is an open-source technology, and can be thought of as multifold.
+
+The Client
+The Server
+
+Each component can be implemented by anyone - but contain different concepts of trust. We will analyze both components in this paper and the various attributes that contribute to their properties. The various properties we will analyze are:
+
+Trust - Who must the user trust?
+Security - How secure is the system? What I/O exist and how are they protected from malicious behavior or outside actors?
+Incentive - What incentive exists for the user/implementor. [Proposal]
+
+Since each component can be implemented by anyone, including a user themselves, we will refer to the entity implementing a component as the implementer and the entity using the component as the user. Note that these entities may be identical, but as we will outline, the properties that will affect them individually, and therefore deserve unique considerations within this analysis. 
+
+
+Background
+To understand CryptoPass🛡️, we must first understand a few underlying technologies. I will use this section to give a background on the technologies and research backing and enabling CryptoPass🛡️.
+
+Research
+The most important piece of research that goes into enabling CryptoPass🛡️ is Shamir’s Secret Sharing Schema (SSSS). While SSSS is not novel research, nor complicated, it has numerous applications. In fact, Adi Shamir’s paper that described this method is so simple it requires only two pages. The most basic premise for SSSS is as follows:
+
+Consider a string S \n C^n, and some function F: C \rightarrow \mathbb{Z}^2_{16}, where C is the set of all ASCII characters. We can use F then to convert S into a string of hex values, as well as . 
+
+Consider some secret string $S$, and some bijective function that can convert $S$ into a real number, say $\beta$. Then, create a polynomial of degree $k-1$, where $k$ is some constant, and the 0th term of the polynomial is $\beta$. Call the polynomial $P$.
+
+Note: I wonder if it is just as secure to split the $\beta$ into components, say base $k-1$, and create the polynomial that way. 
+
+Then, to distribute trust, share any number of unique points on that polynomial with different entities. $<k$ points provide no information towards the equation for $P$, and thus no information of $\beta$, this is proved by Lemma 1. Only with $\geq k$ points, can one use Lagrange interpolation to recalculate $P$, and therefore recalculate $beta$ and then use $F$ to reconstruct $S$. 
+
+Parameters: 
+$k$ - threshold for reconstruction
+$d$ - point distribution
+$S$ - secret
+
+This technique provides CryptoPass🛡️ the ability to distribute trust across different entities a.k.a servers. SSSS permits sharing multiple points with the same entity, essentially providing more power, and in essence more trust, to that entity. With CryptoPass🛡️, all of the parameters to SSSS are chosen by the user, and therefore allow the user full and complete transparency. This will come up again as we perform our trust analysis.
+
+Technologies
+As previously noted, CryptoPass🛡 can be implemented by anyone, and therefore does not rely on any specific technology. The CryptoPass🛡️ team though has used specific techniques to ensure an extensible product that can be easily implemented by various different implementers. 
+
+Rust, the programming language, heavily leverages the power of code-generation in its complication and exposes much of this power to developers. We have in essence generated a new language form that enabled extending the CryptoPass🛡️ protocol for various different forms of authentication. While this language is probably not extensible to ALL use-cases, it is likely powerful enough to implement a wide range of simple authenticators. 
+
+We show that the framework is robust to different types of authentication by using it to implement three core authenticators: biometric, knowledge, and access. Biometric being that the user has some biometric capability to provide identity (Fingerprint, FaceID, iris, etc), knowledge being the user knows some password or question-answer pair, and access being that the user has access to an email, phone, or some other system.
+
+Documentation
+Documentation for CryptoPass🛡 can be found here. Below I provide a description of the protocol for a standard client and server. Technically, anyone can implement a client, so the client need not operate this way. This will be a component of the trust analysis in that a client that does not necessarily perform actions in this way could be nefarious. Users must trust the clients they use - and therefore clients should be audited.
+
+Component Analysis
+The purpose of the component analysis is to analyze the effectiveness of CryptoPass🛡and its various features. 
+
+Client
+The CryptoPass🛡client is the UI/UX that the user interacts with to utilize the CryptoPass🛡service. This can take many different forms: CLI, Library, Web-app, browser extension, or anything else that allows for user input. As a result, CryptoPass🛡 is not really dependent on a client implementation. As noted above though, clients should always be audited to ensure that they are not malicious. Using multiple clients at a time is highly advised, so better ensure no single client has complete control over your secret. 
+
+Because a client can be malicious — trusting your client's implementation is paramount and can lead to various different forms of attack. 
+
+Trust Analysis
+There are various components where a client might attempt to be malicious. A client is, in its most basic form, a data-converter, or a pair of functions that, over time, maintain two streams of data, user -> API; API -> user. Therefore, trust comes in the form of verifying that the client in fact performs their conversions as they claim to. (Note: we will address attacks that this model poses in the security section).  
+
+First, let us analyze the user -> API. The CryptoPass🛡protocol contains four such calls. (Register, Verify Register, Authenticate, Verify Authenticate). A potentially malicious client could alter the data for registering/verifying register to registering YOUR secrets with THEIR email. This is no different from another password holder altering your username behind your back, and consequently not giving you access to your account data. This same theme goes for changing the secret component or the data in the registration process. Similarly in the authentication process, the client could alter data. The most worrisome situation though is the following.
+
+> Imagine the client truthfully registers you, but upon authentication alters data for the handler. From your perspective, your data has been sent to the handler, and you have successfully passed a certain boundary of authentication with this server. In truth, the client has just successfully stolen whatever it is your handler is meant to provide you.
+
+We will analyze a similar situation in the incentives section — and propose a system that potentially incentivizes client implementers to not perform such a malicious act.
+
+Finally, while not all clients must use SSSS to split and distribute a secret, it is the proposed method for secure and memory-inexpensive storage. Nonetheless, if a client chooses to implement a different sharing schema, that sharing schema must also factor into the user's assessment of trust. Is that Sharing Schema adequately secure? Is it supported by other clients? Is it in fact invertible?
+
+Security Analysis
+The security analysis of the CryptoPass🛡is multifold, and is heavily tied into the trust analysis. In essence, the trust analysis asks the questions of security with respect to the implementor. Now, we will consider the questions of security with respect to outside actors. Are there potentials for MITM attacks, where the middle-man is no longer the implementor, but some hacker? 
+
+Similar to the analysis above, let us consider the lifecycle of data in the system, and think of potential locations where the data might become available to an outside actor.
+
+Remember, at any point when the data is within the system, there is potential for logging of that data. It is paramount that the client not log ANY secure data, such as with any system. Make sure that the client acutely checks for tracing of its own work, and the work of the packages it utilizes to ensure payloads, function parameters, or return values are not logged or cached. Obviously, these also bear questions of trust, but even if we assume trustworthiness, we cannot assume a lack of mistakes.
+
+Any malicious actor can listen to screen activity, therefore we assume that the user has no screen malware on their machine. This would complicate ANY and ALL programs that request user input, and is not specific to CryptoPass🛡. Data finally leaves the system over the network. For security reasons, it is paramount that the implementer sends data over an SSL connection. In fact, since the servers implement their work over HTTPS, a client would be inoperable if it didn’t utilize SSL. By virtue of HTTPS being a secure form of communication, we conclude that the network is resilient to MITM attacks as well.
+
+
+Incentive Analysis (Proposal)
+This analysis is particularly interesting and provides a means for us to get creative. In fact, this is a proposal section, not documentation such as the others. In other words, a system of incentives has not yet been implemented in CryptoPass🛡. This section will outline a potential design for such a system, and analyze its pros and cons. 
+
+The goals of this section are for us to design an incentive system that incentives implementers to implement trustworthy and secure clients. We could also think about incentivizing users to use those clients — but the barriers of entry (programming, maintenance, testing, etc)  for most people here is enough to incentivize a user to use a client (at some potential cost to them), overwriting their own. 
+
+It is very easy to create a system where, given an incentive for a high customer count, a group would want to be trustworthy and secure. In the negative case, if an entity implemented an untrustworthy and insecure client, he quickly would lose users. Users would use the service once, have a bad experience, or recognize its untrustworthiness, and quickly write bad reviews, stop using it, and tell their friends. This sort of trust structure exists throughout the industry for numerous SW/HW tools, so I will not advance my analysis here. Rather, let us focus more on the incentive of numbers. 
+
+Theoretically, a client could mine data from its users. It could request birthdays, zip code, etc, and sell this data to better understand people’s trustworthiness in general. It could also be used in studies researching trustworthiness, or the adoption of decentralized methods of computation/storage. 
+
+One cannot necessarily create a payed-service on the client-side, because we specified that clients should be open-source. Charging for the service is nonetheless a viable approach, the downside being that code cannot be open-source, and therefore proper secret splitting, secret non-storage, etc are not guaranteed. If people trust the service though, and it has proven its legitimacy, then paying for a client is a viable incentive for a client implementor. 
+
+It is more likely that the client will not be the main driver of incentive, but rather the server, and server implementers will also implement clients to best integrate the user experience.
+
+Server
+
+Trust Analysis
+Trusting a server means trusting whatever entity hosts the server. The great part about CryptoPass🛡 is that anyone can host a server, and contribute to your authentication process. This means that you don’t actually need to place 100% of your trust in a single entity. But indicating trust is not important here because it’s distributed would be a cop-out.
+
+Assume that you have placed some amount of your trust on a single server. The lower that trust is, the less power they have to authenticate you (the positive side), but it also means they have less power to hold you hostage (the negative side). Imagine you were at home, preparing dinner with your 6-year-old child. Do you give them a knife so they can potentially cut the vegetables, but risk them cutting themselves? Probably not!
+
+By keeping your trust in each server to a minimum, you increase the number of servers you might need to authenticate with, but you also increase your security from a potential server being hacked. Maybe you trust one server with 49% of your data, and 20 different other servers with the remaining amount such that if this one server goes down you need to authenticate with ALL 20 in order to recover your data, but if the trustworthy server is available to authenticate you it only takes one other server to do the job. There are various different groupings and potential distributions of trust here. Understanding how users can develop a methodology for trust is coupled with the incentives analysis and is described below through a dashboard of metrics that analyze a server's success rate, the number of users, etc— the idea being that people tend to trust what other’s have trusted, or have proven trustworthy.
+Security Analysis
+Similar to the client analysis, CryptoPass🛡’s server security analysis will consider how an outside actor might maliciously control a server. Some considerations here are identical to the client analysis, logging (sharing to external services such as Sumologic, Cloudwatch, etc.), or HTTP threats that can easily be remedied by smart software development. The server must protect the data that it holds at any given time though.
+
+It is imperative that servers implement their system with encrypted databases, protected by passwords that are also secured. If servers utilize third-party services, ensuring that all of their dependencies are secure, and don’t handle data maliciously is also paramount.
+
+While encrypting the database provides strong security against reading protected data, hashing can act as another strong defense against such attacks. Hashing data that need only be compared and not used post-factor is a simple way to add defenses to CryptoPass🛡’s backend services. For example, a knowledge-based server, such as a Question-Answer server, does not need to use the knowledge data, but simply compare it to the user’s post-facto submission. 
+Incentive Analysis (Proposal)
+Now for the interesting part, server incentives. Due to the integration of CryptoPass🛡 with the blockchain and with cryptocurrencies, we found a cryptocurrency incentive structure suiting for CryptoPass🛡. 
+
+Just as there are two sides to CryptoPass🛡, registration and verification, so too are there two sides to this incentive. On the registration side: a User can pay a fee for registering with a server. Therefore, you are paying for the storage space that your points occupy. If server implementors wished to lower the boundary of entry, they could also make this component-free, or even extremely low. 
+
+On the verification side, the user must first pay a small deposit to request registration. Then, upon verification, pay another small fee to actually retrieve their secret back. The reason for both of these is important. The initial deposit keeps malicious actors from spamming servers requesting verification. The final fee incentivizes servers to actually provide the user with their secret. If there was no incentive for the server to return the secret, it would always take the deposit and run. 
+
+Obviously, there is also an incentive of reputation. Given a metric requirement for servers to implement, CryptoPass🛡 could create a dashboard displaying metrics for servers such as “number of authentication requests,” “number of verifications” etc. These metrics would allow users to make their own informed decisions and potentially reduce the need for small fees at each point of contact. Still, the fees encourage malicious actors to not spam servers because they have nothing to gain from paying the fees.
+
+Most incentives will be financially based, but not all servers must implement them in the same way. Take a server that’s authentication method uses a Twitter post for example. I.e. to authenticate yourself with the server, the server responds on the `/authenticate` endpoint with information to post on Twitter. Then, using the handle you're registered with the server, you post on Twitter, the server checks to make sure the post matched the content it requested you to post and returns your secret. In this manner, the server knows you have access to the Twitter account, and assumes identify verification based on that (similar to access to an email). A company could create a business model surrounding this, by providing people with advertisement content, or any other type of content, to post for their benefit. 
+
+Technical Description
+Server(s) (simple-syrup)
+
+> Github: https://github.com/benj2468/simple-syrup
+
+Simple syrup is the core repository behind the development of CryptoPass🛡 servers. 
+
+This code-base is based on a few guiding principles:
+The development of successful servers should be easy. (Ease of Engineering)
+Each server should only compile what that server requires, it should know nothing about other servers. (Distributed)
+Abstract complications such as Database management as much as possible from the developer. 
+
+To accomplish these three goals, we decided to leverage the Rust language’s strong basis of code-generation and macroinstructions. We have essentially devised a small language that enables developers to create powerful servers that implement the CryptoPass🛡 protocol with less than 100 lines of code, code that doesn’t have to deal with HTTP setup, routing, or database management (mostly). We have used this framework to develop three different types of authentication servers:
+
+Knowledge-Based Authentication (Password, Question-Answer)
+Biometric-Based Authentication (TouchID, FaceID)
+Access-Based Authentication (Twitter Posting, Email)
+
+We believe that the ability to implement with this framework three three core types of identity verification methods proves that this framework is robust, abstracted well, and generalizable for multiple cases.
+
+Client (cryptopass)
+
+> Gitlab: https://git.dartmouth.edu/f002q3z/cryptopass
+
+Cryptopass is the core repository behind the clients and the smart contract that utilizes the distributed authentication servers of simple syrup to perform password recovery, as well as account transfer. 
+
+The only major algorithm that exists here is Shamir Secret Sharing Schema. This makes use of relatively rudimentary linear algebra. First, any secret is converted into a numerical representation of the string. Since secrets can be long, we actually split the string into multiple chunks, and then perform the following steps on each chunk. That number is then used as the bias term in a polynomial that has degree k-1, where k is the threshold for recovering your password. We then generate n points on the polynomial, where n > k, and is a number specified by the user in the client. The points are then distributed to their respective servers.
+
+The recollection algorithm simply uses Lagrange interpolation to regenerate the series of polynomials that were made, failing if less than k points are recovered, succeeding otherwise. Then, using another term to indicate the order in which the chunks were created, we reconstruct the password in its entirety! 
+
+Otherwise, data structures are not overly complicated and algorithms are rudimentary in this system.
+
+All Together
+The system works as a total application. The client runs and is told where to look for servers. Future work will allow the user to input where to look for servers. Once the client has found servers, it prompts the user with two different workflows. The first workflow option is to register with servers, the second is to recover. Registering stores your data on servers after you have provided the servers with your identity data, and verified your email address. Recovering initiates the verification and authentication process with certain servers, either returning your secret string in the Shamir Secret Sharing version (web2), or transferring your funds in the Crypto version (web3).
+
+What’s more interesting though, is how you can easily deploy servers that provide different capabilities, independent of one another even though they all share a single codebase. Conditional compilation and rust feature flags allow the developer on deployment to specify exactly how he/she wants to provision thor servers. Features directly correspond to server types, so in order to deploy a QA server, the `qa` feature must be set. 
+
+Features are included in documentation but include testing, development, for each server type, and for web3 ability. 
+
+V3.0
+
+What is being removed:
+Saving server-linking data within servers - I don’t really like this feature… it gives servers information about where their user’s data exists, even if they cannot acces it, knowing where it is feels like too much knowledge to me… 
+Maybe this is not true since canyone can query a user to see their status on a server… BUT the server doesn’t know if they are using the same email
+So I guess a server could maliciously query all servers for a status, but that’s not even necessarily the same password :thumbsup 
+
+What is new:
+Database Structure
+Payload to Contract - see `commit` method
+
+id
+email
+points
+contract_data
+data
+uuid
+string
+Point[][] (jsonb)
+contract_address, contract_pub_key
+jsonb
+
+
+Contract Structure
+Constant: (hashed(point[][]), weight)[]
+Constant: Threshold
+Public Method: commit(xs uint66, ys uint64, mod uint64, destination bytes, source)
+Checks if hash of data matches any bunches
+If so, add them to respective lists, and store destination
+Check threshold - call transfer
+Public Method: transfer()
+Perform lagrange interpolation on each list of points to recover polynomial - which encodes the private_key (this is an offset)
+Decode the majority destination using the offset
+And transfer to that destination
+Public Method: get_final_destination()
+A few helper methods for the above
+
+Destination Reconstruction (within Contract)
+In V2.0, the contract payload was a series of bytes, and a destination address. After further consideration, we realized that this was insecure. There exists a potential attack using the blockchains public nature.
+
+A malicious MITM attack could view the transaction, say A, posted to the blockchain, viewing the payload as bytes and an address. Then, quickly, before this transaction gets processed, this MITM could send a series of transactions with the same bytes, but a different address, call these transaction B^n. If any transaction within B^n get’s processed before A, then the MITM has succesfully granted the power of the points being shared, to B’s address, rather than to A’s.
+
+The new structure prevents this by implemented the Lagrange interpolation within the smart contract. Now, rather than sharing a series of bytes to be hashed, we share the points exactly as they were stored on the server. The points, will reconstruct to a polynomial whose $\beta$ is the key to decoding the bytes that were provided as the second argument. In V3.0 that key is an offset, which is $n$ bits large. 
+
+This process of giving each server the offset, in effectually not doing anything, other than the larger the potential for the offset, the harder it would be for an actor to spam the blockchain with transactions with the provided points, but a different destination. This would cost them a lot of gas, and would not be worthwhile if the cost of trying all offsets is high enough.
+
+For future versions, it would be ideal for this key to be the private key for some public-private key cryptographic algorithm, then each server can store the public key, rather than the offset itself. The challange with this is that RSA and other cryptographic hashing algorithms have very large keys, which would require the polynomial to be incredibly large. The blockchain can handle up to 128 bit integers, and if we were to use the basic SSSS where the secret becomes the 0th term in the polynomial, we would not be able to store the secret in such a restricted base. Finding a new way to encode $S$ into the polynomial would make this process much easier.
+
+This would come at the cost of computation within the smart-contract. Computation in the blockchain is incredibly expensive, and we don’t want to have to do a complete lagrange interpolation - since we don’t need to recover the entire polynomial, just the $\beta$ term. This allows for a cheaper computation. Even cheaper computations would be ideal to decrease the gas-requirement for the smart-contract. Finding a method for using a public/private key system as well as small keys would be ideal. 
+
+This public/private system would be only a secondary form of hashing, to remove the problem where we provide each server with the same information that the contract must decipher. Becuase of the secondary nature, we do not need incredibly strong hashing/mathematical security on this public/private system.
+
+Limitations
+
+Each server can still only hold information for a single smart-contract. This means that you can have multiple smart-wallets, but each server can only support knowledge of one smart wallet for each email. This means if you overwrite a server with a new smart-wallet with the same email, then you might lose access to the previous smart-wallet.
+
+Extensibility
+
+Acknowledgments
+
+Thank you to Professor Joosten for advising us on this project. Thank you to my brother Noah, for encouraging me to take on a completely novel project for myself. Thank you to Professor Sean Smith for brainstorming with me regarding Cryptography. And of course, a special thanks to the CryptoPass team: Sean Clancy and Harshit Yadav. 
+
