@@ -35,4 +35,22 @@ For each of the modes of operation discussed in Section 4.6, what is the effect 
 
 ### Q3
 
-See (des.c)[des.c]
+See [des.c](des.c)
+
+# Chapter 5
+
+### Problem 4
+
+Consider setting up RSA with $p=7$ and $q=11$
+
+1. What are the suitable values for e?
+   1. [7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 49, 53, 59]
+2. If $e=13$, then what is d?
+   1. Using Extended GCD algorithm, we determine that the value is 6.
+3. What is the largest block-size in bits that we could use for RSA encryption using these parameters?
+   1. $\lfloor log_2(77) \rfloor = 6$
+   2. Therefore, the largest block-size in bits we could use is 7. This is because the block (or number) we want to encrypt MUST be smaller than 77.
+
+### Q5
+
+See [rsa.c](rsa.c)
