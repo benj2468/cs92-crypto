@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "./des.h"
+#include "includes/des.h"
 
 // All of the numbers in the permutation tables are 0-indexed.  However, most
 // DES references show them 1-indexed!
@@ -179,12 +179,6 @@ void print_hex(unsigned char input[], unsigned char nbytes)
     printf("%s", bin_to_string(input, nbytes));
 }
 
-/*
-unsigned char* hexstr_to_bin(unsigned char* input, unsigned char length) {
-    //TODO
-}
-*/
-
 void xor (const unsigned char *block_a, const unsigned char *block_b, unsigned char *output, unsigned char nbytes) {
     for (unsigned char i = 0; i < nbytes; i++)
     {
@@ -304,6 +298,12 @@ void des_feistel(const unsigned char input[4], const unsigned char subkey[6], un
     permute(sbox_output, feistel_end_permutation, output, 4);
 }
 
+/*
+DES Encrypt
+*/
+
+int glitch;
+
 void des_encrypt(unsigned char block[8], unsigned char key[8], unsigned char output[8])
 {
     // TODO: This whole program could probably benifit from using larger
@@ -349,6 +349,12 @@ void des_encrypt(unsigned char block[8], unsigned char key[8], unsigned char out
         // Round calculation (odd round)
         des_feistel(left_block, subkey, fiestel_output);
         xor(fiestel_output, right_block, right_block, 4);
+
+        if ((0 == glitch) && (0 == i))
+            break;
+
+        if ((1 == glitch) && (2 == i))
+            break;
     }
 
     // Switch back left and right block
@@ -358,78 +364,20 @@ void des_encrypt(unsigned char block[8], unsigned char key[8], unsigned char out
     permute(left_block, final_permutation, output, 8);
 }
 
-// Block size = 8 bytes
-#define BLOCK_SIZE 8
-
-int cbc_des_encrypt(const char *plaintext, const unsigned char *key, unsigned char *ciphertext, const unsigned char *initialization_vector)
+void *print_stuff(unsigned char *ciphertext)
 {
-    unsigned char *top_register;
+    unsigned char *left_hand_side1 = malloc(4);
+    memcpy(left_hand_side1, ciphertext, 4);
+    unsigned char *right_hand_side1 = malloc(4);
+    memcpy(right_hand_side1, &ciphertext[4], 4);
 
-    top_register = initialization_vector;
+    unsigned char *output = malloc(4);
+    xor(left_hand_side1, right_hand_side1, output, 4);
 
-    int plaintext_len = strlen(plaintext);
-
-    int i = 0;
-    unsigned char *block_txt = malloc(BLOCK_SIZE);
-    unsigned char *pre_encrypt_txt = malloc(BLOCK_SIZE);
-    unsigned char *block_cipher = malloc(BLOCK_SIZE);
-
-    while (i < plaintext_len)
-    {
-        strncpy(block_txt, &plaintext[i], BLOCK_SIZE);
-
-        printf("Block Text [%d]: %s\n", i / BLOCK_SIZE, bin_to_string(block_txt, BLOCK_SIZE));
-
-        xor(block_txt, top_register, pre_encrypt_txt, BLOCK_SIZE);
-
-        printf("XORed Text [%d]: %s\n", i / BLOCK_SIZE, bin_to_string(pre_encrypt_txt, BLOCK_SIZE));
-
-        des_encrypt(pre_encrypt_txt, key, block_cipher);
-
-        printf("Encryped Text [%d]: %s\n", i / BLOCK_SIZE, bin_to_string(block_cipher, BLOCK_SIZE));
-
-        strncat(ciphertext, block_cipher, BLOCK_SIZE);
-
-        printf("CipherText [%d]: %s\n", i / BLOCK_SIZE, bin_to_string(ciphertext, (i + BLOCK_SIZE)));
-
-        top_register = block_cipher;
-
-        i += BLOCK_SIZE;
-    }
-
-    return 1;
-}
-
-int ctr_des_encrypt(const char *plaintext, const unsigned char key[BLOCK_SIZE], unsigned char *ciphertext, unsigned char *counter)
-{
-    unsigned char *counter_value;
-    unsigned char encrypted_counter_value[BLOCK_SIZE];
-    unsigned char block_cipher_text[BLOCK_SIZE];
-
-    int plaintext_len = strlen(plaintext);
-    int i = 0;
-    while (i < plaintext_len)
-    {
-        counter_value = &counter[i];
-
-        printf("Counter Value [%d]: %s\n", i / BLOCK_SIZE, bin_to_string(counter, BLOCK_SIZE));
-
-        des_encrypt(counter_value, key, encrypted_counter_value);
-
-        printf("Encrypted Counter [%d]: %s\n", i / BLOCK_SIZE, bin_to_string(encrypted_counter_value, BLOCK_SIZE));
-
-        xor(encrypted_counter_value, &plaintext[i], block_cipher_text, BLOCK_SIZE);
-
-        printf("XORed [%d]: %s\n", i / BLOCK_SIZE, bin_to_string(block_cipher_text, BLOCK_SIZE));
-
-        strncat(ciphertext, block_cipher_text, BLOCK_SIZE);
-
-        printf("CipherText [%d]: %s\n", i / BLOCK_SIZE, bin_to_string(ciphertext, (i + BLOCK_SIZE)));
-
-        i += BLOCK_SIZE;
-    }
-
-    return 1;
+    printf("Output from first encryption:    %s\n", bin_to_string(ciphertext, strlen(ciphertext)));
+    printf("    Left Side:                   %s\n", bin_to_string(left_hand_side1, strlen(ciphertext) / 2));
+    printf("    Right Side:                  %s\n", bin_to_string(right_hand_side1, strlen(ciphertext) / 2));
+    printf("    XOR       :                  %s\n", bin_to_string(output, strlen(ciphertext) / 2));
 }
 
 int main()
@@ -440,7 +388,21 @@ int main()
     unsigned char key[8] = {0x0f, 0x15, 0x71, 0xc9, 0x47, 0xd9, 0xe8, 0x59};
     unsigned char *ciphertext = malloc(BLOCK_SIZE * 2);
 
-    ctr_des_encrypt(plaintext, key, ciphertext, initialization_vector);
+    printf("Plaintext:                     %8s\n", bin_to_string(plaintext, strlen(plaintext)));
 
-    printf("%s\n", bin_to_string(ciphertext, strlen(plaintext)));
+    glitch = 0;
+
+    des_encrypt(plaintext, key, ciphertext);
+
+    glitch = 1;
+    unsigned char *ciphertext2 = malloc(BLOCK_SIZE * 2);
+
+    des_encrypt(plaintext, key, ciphertext2);
+
+    glitch = 2;
+
+    print_stuff(ciphertext);
+    print_stuff(ciphertext2);
+
+    // printf("%s\n", bin_to_string(ciphertext, strlen(plaintext)));
 }

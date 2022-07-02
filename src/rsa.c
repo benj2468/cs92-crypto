@@ -2,12 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-
-#define ERROR_CHECK \
-    if (res != 0)   \
-        printf("There was some error: %d", ERROR_CODES[res]);
-
-unsigned char *ERROR_CODES[2] = {"None", "Some Error"};
+#include "includes/crypto.h"
 
 unsigned int *
 read_primes(unsigned char *file_name)
@@ -38,24 +33,6 @@ read_primes(unsigned char *file_name)
     return primes;
 }
 
-int extended_gcd(int a, int b, int *x, int *y)
-{
-    if (a == 0)
-    {
-        *x = 0;
-        *y = 1;
-        return b;
-    }
-
-    int _x, _y;
-    int gcd = extended_gcd(b % a, a, &_x, &_y);
-
-    *x = _y - (b / a) * _x;
-    *y = _x;
-
-    return gcd;
-}
-
 int min(int a, int b)
 {
     return (a > b) ? b : a;
@@ -82,47 +59,6 @@ unsigned int find_coprime(unsigned int phi)
     return 0;
 }
 
-int mod(int a, int b)
-{
-    return a < 0 ? mod(b + a, b) : a % b;
-}
-
-char *int2bin(int a, char *buffer, int buf_size)
-{
-    buffer += (buf_size - 1);
-
-    for (int i = 31; i >= 0; i--)
-    {
-        *buffer-- = (a & 1) + '0';
-
-        a >>= 1;
-    }
-
-    return buffer;
-}
-
-unsigned int mod_exp(unsigned int b, unsigned int e, unsigned int modulus)
-{
-    if (e == 0)
-        return 1;
-    if (b == 0)
-        return 0;
-
-    unsigned long y;
-    if ((e % 2) == 0)
-    {
-        y = mod_exp(b, e / 2, modulus);
-        y = (y * y) % modulus;
-    }
-    else
-    {
-        y = mod_exp(b, e - 1, modulus);
-        y = (b * y) % modulus;
-    }
-
-    return (unsigned int)((y + modulus) % modulus);
-}
-
 typedef struct PublicKey
 {
     unsigned int n;
@@ -142,14 +78,11 @@ int generate_rsa_keys(unsigned int *primes, PublicKey *pub_key, PrivateKey *priv
 
     unsigned int index1, index2;
 
-    // scanf("%u", &index1);
-    // scanf("%u", &index2);
+    scanf("%u", &index1);
+    scanf("%u", &index2);
 
-    // unsigned int p = primes[index1];
-    // unsigned int q = primes[index2];
-
-    unsigned int p = primes[1254];
-    unsigned int q = primes[2001];
+    unsigned int p = primes[index1];
+    unsigned int q = primes[index2];
 
     printf("p = %u, q = %u\n", p, q);
 
@@ -208,7 +141,7 @@ int rsa_decrypt(unsigned int cipher, PrivateKey *key, unsigned int *buffer)
 int main()
 {
     int res;
-    unsigned int *primes = read_primes("./primes.txt");
+    unsigned int *primes = read_primes("./support/primes.txt");
 
     PublicKey *pub_key = malloc(sizeof(struct PublicKey));
     PrivateKey *priv_key = malloc(sizeof(struct PrivateKey));

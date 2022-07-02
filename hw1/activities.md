@@ -35,7 +35,7 @@ For each of the modes of operation discussed in Section 4.6, what is the effect 
 
 ### Q3
 
-See [des.c](des.c)
+See [des.c](../src/des.c)
 
 # Chapter 5
 
@@ -53,4 +53,8 @@ Consider setting up RSA with $p=7$ and $q=11$
 
 ### Q5
 
-See [rsa.c](rsa.c)
+See [rsa.c](../src/rsa.c)
+
+## Grad Problem
+
+... No idea what to do here...

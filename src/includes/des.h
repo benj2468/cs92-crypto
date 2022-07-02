@@ -1,3 +1,7 @@
+
+// Block size = 8 bytes
+#define BLOCK_SIZE 8
+
 char *bin_to_string(const unsigned char input[], int nbytes);
 
 void xor (const unsigned char *block_a, const unsigned char *block_b, unsigned char *output, unsigned char nbytes);
