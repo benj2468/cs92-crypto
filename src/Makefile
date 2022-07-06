@@ -16,6 +16,12 @@ ctr: ctr.o des.o
 glitch: glitch.o
 	$(CC) -o $@ $^
 
+cbc_mac: cbc_mac.o des.o
+	$(CC) -o $@ $^
+
+cbc_mac.o: cbc_mac.c includes/des.h
+	$(CC) -c cbc_mac.c -o $@
+
 cbc.o: cbc.c
 	$(CC) -c $^
 
@@ -38,4 +44,4 @@ glitch.o: glitch_des.c includes/des.h
 	$(CC) -c glitch_des.c -o $@
 
 clean:
-	$(RM) -f cbc ctr rsa elgamal glitch *.o
+	$(RM) -f cbc ctr rsa elgamal glitch cbc_mac *.o
