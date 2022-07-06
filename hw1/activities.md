@@ -47,9 +47,11 @@ Consider setting up RSA with $p=7$ and $q=11$
    1. [7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 49, 53, 59]
 2. If $e=13$, then what is d?
    1. Using Extended GCD algorithm, we determine that the value is 6.
+   2. Correction: This should be 37 - I found the inverse mod 77, should have been mod 60.
 3. What is the largest block-size in bits that we could use for RSA encryption using these parameters?
    1. $\lfloor log_2(77) \rfloor = 6$
    2. Therefore, the largest block-size in bits we could use is 7. This is because the block (or number) we want to encrypt MUST be smaller than 77.
+   3. Correction: This should be 6, not sure why I wrote 6 then switched to 7. The plaintext must be less than the modulus, which is 77, therefore we must be within 6 bits.
 
 ### Q5
 
