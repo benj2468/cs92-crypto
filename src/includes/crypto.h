@@ -8,8 +8,8 @@
     if (res != 0)   \
         printf("There was some error");
 
-unsigned int mod_exp(unsigned int b, unsigned int e, unsigned int modulus);
-int extended_gcd(int a, int b, int *x, int *y);
+unsigned long mod_exp(unsigned long b, unsigned long e, unsigned long modulus);
+unsigned long extended_gcd(unsigned long a, unsigned long b, unsigned long *x, unsigned long *y);
 unsigned int mod(unsigned long a, unsigned int b);
 char *int2bin(int a, char *buffer, int buf_size);
 
