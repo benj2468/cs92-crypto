@@ -5,6 +5,7 @@ on: push
 jobs:
   convert_via_pandoc:
     runs-on: ubuntu-20.04
+    container: docker://pandoc/latex
     steps:
       - uses: actions/checkout@v2
       - name: prepare output directories
@@ -13,7 +14,6 @@ jobs:
             mkdir -p sub/$d
           done
       - name: convert md to pdf
-      - uses: docker://pandoc/latex
         run: |
           for f in ./**/*.md; do
               pandoc ${f} -o sub/${f%.md}.pdf
