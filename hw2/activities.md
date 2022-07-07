@@ -55,7 +55,8 @@ Pins are a commonly used security mechanism
 More Likely, the reasoning here is that 4-digit pins implies $10^4$ possible pins, which means we would expect a collision after roughly $\sqrt(10^4) = \sqrt(10000) = 100$ pin distributions, since we have 120 students, we would expect there to be a collision.
 
 2.  Approximately how many students would you need to have in the class before a similar likelihood was expected if banks used 5-digit PINS instead?
-    5-digit pins implies $10^5$ possible pins, which means that we would expect a collision after roughly $\sqrt(10^5)$ pin distributions, which would mean $10^{2.5} \approx 316$ students.
+
+5-digit pins implies $10^5$ possible pins, which means that we would expect a collision after roughly $\sqrt(10^5)$ pin distributions, which would mean $10^{2.5} \approx 316$ students.
 
 ## Q5 (6.13)
 
