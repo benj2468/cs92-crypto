@@ -36,6 +36,16 @@ $$\frac{2^{1536}}{ln(2^{1536})} = \frac{2^{1536}}{1536*ln(2)} \approx \frac{2^{1
 
 See [elgamal.c](../src/elgamal.c)
 
+Run it with the option `-poker` to view the poker game, and with `-d` to see debug traces
+
+c. explain why this is still secure
+
+To determine if this is still secure we need to decide if Alice can somehow recover the cards, or if Bob can determine which card Alice selected.
+
+The only change is reusing $k$, so the question arises, can Alice recover $k$ from knowledge of the various ciphertexts? As the textbook states, recovering $k$ is at least as hard as the discrete logarithm problem, and therefore beleived to be very challenging. Since $k$ and $g$ are the same for each of the cards, $C_1$ will also be the same for each card. Therefore, the attacker has no extra knowledge from $C_1$. What about from $C_2$? Can Alice extract $k$ from $C_2$ knowing that $y^k$ is a constant for each card? Well Alice still doesn't know what $P$ is, nor does she actually know what that constant is (since she can't determine k).
+
+Also, Bob cannot determine what Alice's card is until he returns it to her. She only uses one $k$ value, so we can assume the security of the textbook-version of Elgamal still stands.
+
 ## Q4 (6.7)
 
 Pins are a commonly used security mechanism
