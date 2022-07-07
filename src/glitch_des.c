@@ -364,45 +364,49 @@ void des_encrypt(unsigned char block[8], unsigned char key[8], unsigned char out
     permute(left_block, final_permutation, output, 8);
 }
 
-void *print_stuff(unsigned char *ciphertext)
-{
-    unsigned char *left_hand_side1 = malloc(4);
-    memcpy(left_hand_side1, ciphertext, 4);
-    unsigned char *right_hand_side1 = malloc(4);
-    memcpy(right_hand_side1, &ciphertext[4], 4);
+// unsigned char plaintext[8] = {0x6d, 0x73, 0x62, 0x72, 0x6f, 0x77, 0x6e, 0x33};
+unsigned char initialization_vector[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+// unsigned char plaintext[8] = {0x02, 0x46, 0x8a, 0xce, 0xec, 0xa8, 0x64, 0x20};
+unsigned char plaintext[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+unsigned char key[8] = {0x0f, 0x15, 0x71, 0xc9, 0x47, 0xd9, 0xe8, 0x59};
 
-    unsigned char *output = malloc(4);
-    xor(left_hand_side1, right_hand_side1, output, 4);
+// void *print_stuff(unsigned char *ciphertext)
+// {
 
-    printf("Output from first encryption:    %s\n", bin_to_string(ciphertext, strlen(ciphertext)));
-    printf("    Left Side:                   %s\n", bin_to_string(left_hand_side1, strlen(ciphertext) / 2));
-    printf("    Right Side:                  %s\n", bin_to_string(right_hand_side1, strlen(ciphertext) / 2));
-    printf("    XOR       :                  %s\n", bin_to_string(output, strlen(ciphertext) / 2));
-}
+//     unsigned char *output = malloc(4);
+//     xor(left_hand_side1, right_hand_side1, output, 4);
+
+//     printf("Output from first encryption:    %s\n", bin_to_string(ciphertext, strlen(ciphertext)));
+//     printf("    Left Side:                   %s\n", bin_to_string(left_hand_side1, strlen(ciphertext) / 2));
+//     printf("    Right Side:                  %s\n", bin_to_string(right_hand_side1, strlen(ciphertext) / 2));
+//     printf("    XOR       :                  %s\n", bin_to_string(output, strlen(ciphertext) / 2));
+// }
 
 int main()
 {
-    // unsigned char plaintext[8] = {0x6d, 0x73, 0x62, 0x72, 0x6f, 0x77, 0x6e, 0x33};
-    unsigned char initialization_vector[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    unsigned char plaintext[8] = {0x02, 0x46, 0x8a, 0xce, 0xec, 0xa8, 0x64, 0x20};
-    unsigned char key[8] = {0x0f, 0x15, 0x71, 0xc9, 0x47, 0xd9, 0xe8, 0x59};
     unsigned char *ciphertext = malloc(BLOCK_SIZE * 2);
 
-    printf("Plaintext:                     %8s\n", bin_to_string(plaintext, strlen(plaintext)));
+    printf("Key:                             %s\n", bin_to_string(key, 8));
+    printf("Plaintext:                       %s\n", bin_to_string(plaintext, 8));
+
+    unsigned char l0[4];
+    memcpy(l0, plaintext, 4);
+    unsigned char r0[4];
+    memcpy(r0, &plaintext[4], 4);
+    printf("    Left Side:                   %s\n", bin_to_string(l0, 4));
+    printf("    Right Side:                  %s\n", bin_to_string(r0, 4));
 
     glitch = 0;
 
     des_encrypt(plaintext, key, ciphertext);
 
-    glitch = 1;
-    unsigned char *ciphertext2 = malloc(BLOCK_SIZE * 2);
+    printf("Ciphertext [glitch=%d]:          %s\n", glitch, bin_to_string(ciphertext, 8));
 
-    des_encrypt(plaintext, key, ciphertext2);
+    unsigned char *lhs = malloc(4);
+    memcpy(lhs, ciphertext, 4);
+    unsigned char *rhs = malloc(4);
+    memcpy(rhs, &ciphertext[4], 4);
 
-    glitch = 2;
-
-    print_stuff(ciphertext);
-    print_stuff(ciphertext2);
-
-    // printf("%s\n", bin_to_string(ciphertext, strlen(plaintext)));
+    printf("    Left Side:                   %s\n", bin_to_string(lhs, 4));
+    printf("    Right Side:                  %s\n", bin_to_string(rhs, 4));
 }
