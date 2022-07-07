@@ -1,6 +1,6 @@
 #include "includes/crypto.h"
 
-unsigned int mod_exp(unsigned int b, unsigned int e, unsigned int modulus)
+unsigned long mod_exp(unsigned long b, unsigned long e, unsigned long modulus)
 {
     if (e == 0)
         return 1;
@@ -19,10 +19,10 @@ unsigned int mod_exp(unsigned int b, unsigned int e, unsigned int modulus)
         y = (b * y) % modulus;
     }
 
-    return (unsigned int)((y + modulus) % modulus);
+    return (unsigned long)((y + modulus) % modulus);
 }
 
-int extended_gcd(int a, int b, int *x, int *y)
+unsigned long extended_gcd(unsigned long a, unsigned long b, unsigned long *x, unsigned long *y)
 {
     if (a == 0)
     {
@@ -31,8 +31,8 @@ int extended_gcd(int a, int b, int *x, int *y)
         return b;
     }
 
-    int _x, _y;
-    int gcd = extended_gcd(b % a, a, &_x, &_y);
+    unsigned long _x, _y;
+    unsigned long gcd = extended_gcd(mod(b, a), a, &_x, &_y);
 
     *x = _y - (b / a) * _x;
     *y = _x;

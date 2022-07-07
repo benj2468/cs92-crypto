@@ -38,16 +38,14 @@ See [elgamal.c](../src/elgamal.c)
 
 ## Q4 (6.7)
 
-Pins are a commonly used security mecahnism
+Pins are a commonly used security mechanism
 
 1. In a class of 120 students who have been assigned 4-digit PINS by their banks, is it more, or less likely that two students have the same PIN to protect their payment card?
 
-More Likely
+More Likely, the reasoning here is that 4-digit pins implies $10^4$ possible pins, which means we would expect a collision after roughly $\sqrt(10^4) = \sqrt(10000) = 100$ pin distributions, since we have 120 students, we would expect there to be a collision.
 
 2.  Approximately how many students would you need to have in the class before a similar likelihood was expected if banks used 5-digit PINS instead?
     5-digit pins implies $10^5$ possible pins, which means that we would expect a collision after roughly $\sqrt(10^5)$ pin distributions, which would mean $10^{2.5} \approx 316$ students.
-
-    The same math as above for part 1, implies 100 students as the threshold.
 
 ## Q5 (6.13)
 

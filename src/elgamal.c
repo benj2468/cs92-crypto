@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,7 +35,7 @@ int generate_keys(PrivateKey *priv_key, PublicKey *pub_key)
     unsigned int x = 1;
     while (x <= 1)
     {
-        x = rand() % p;
+        x = mod(rand(), p);
     }
 
     unsigned int y = mod_exp(g, x, p);
@@ -42,24 +43,27 @@ int generate_keys(PrivateKey *priv_key, PublicKey *pub_key)
     pub_key->y = y;
     priv_key->x = x;
 
+    printf("KeyGen... y = 0x%08x\n", y);
+    printf("KeyGen... x = 0x%08x\n", x);
+
     return 0;
 }
 
 int elgamal_encrypt(unsigned int message, PublicKey *key, ElGamalCipher *cipher)
 {
 
-    unsigned int k = rand() % p;
+    unsigned int k = mod(rand(), p);
 
     printf("Encrypting... k = 0x%08x\n", k);
 
     unsigned int c1 = mod_exp(g, k, p);
-    unsigned int c2 = mod((unsigned long)message * (unsigned long)mod_exp(key->y, k, p), p);
+    unsigned int c2 = mod((unsigned long)message * (unsigned long)mod_exp((unsigned long)key->y, (unsigned long)k, p), p);
 
     cipher->c1 = c1;
     cipher->c2 = c2;
 
-    printf("Encrypted... c2 = 0x%08x\n", c2);
     printf("Encrypted... c1 = 0x%08x\n", c1);
+    printf("Encrypted... c2 = 0x%08x\n", c2);
 
     return 0;
 }
@@ -67,14 +71,16 @@ int elgamal_encrypt(unsigned int message, PublicKey *key, ElGamalCipher *cipher)
 int elgamal_decrypt(ElGamalCipher *cipher, PrivateKey *key, unsigned int *plaintext)
 {
 
-    unsigned int step_1 = mod_exp(cipher->c1, key->x, p);
+    unsigned long step_1 = mod_exp((unsigned long)cipher->c1, (unsigned long)key->x, p);
 
     printf("Step 1 Complete... = 0x%08x\n", step_1);
 
-    unsigned int x, y;
+    unsigned long x, y;
     int gcd = extended_gcd(step_1, p, &x, &y);
 
     unsigned int inverse = mod(x, p);
+
+    printf("Inverse: 0x%08x\n", inverse);
 
     unsigned int step_2 = mod((unsigned long)cipher->c2 * (unsigned long)inverse, p);
 
@@ -87,6 +93,9 @@ int elgamal_decrypt(ElGamalCipher *cipher, PrivateKey *key, unsigned int *plaint
 
 int main()
 {
+
+    // Setup random...
+    srand(time(0));
 
     PrivateKey *priv_key = malloc(sizeof(PrivateKey));
     PublicKey *pub_key = malloc(sizeof(PublicKey));
