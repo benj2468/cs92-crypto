@@ -9,14 +9,16 @@ jobs:
       image: docker://pandoc/core
     steps:
       - uses: actions/checkout@v2
-      - name: prepare sub directories
+      - name: prepare output directories
         run: |
           for d in */; do
             mkdir -p sub/$d
           done
       - name: convert md to pdf
         run: |
-          find ./ -iname '*.md' -type f -exec sh -c 'pandoc ${0} -o sub/${0%.md}.pdf' {} \;
+          for f in ./**/*.md; do
+              pandoc ${f} -o sub/${f%.md}.pdf
+          done
       - uses: actions/upload-artifact@master
         with:
           name: sub
