@@ -71,9 +71,7 @@ If we add the salt into this "dictionary" the adversary might be able to perform
 
 3. Rainbow tables
 
-# TODO the book does not mention rainbow tables...
-
-it appears that this is the same attack as above, but it pre-computes hashes, and is also unfeasible with salting.
+It appears that this is very similar to the method above, i.e. storing a certain amount of data that can help recognize hashed strings in the future. The difference with rainbow tables are that the hashed values are precomputed. If we know some finite set, $P$ that encompasses lots of passwords (maybe not all, but a sufficient amount that we might find a match), we can compute a rainbow table, to determine if a particular hash we see later is in fact in the set $P$, and can locate the plaintext $p \in P$. This is similar to above, but it saves on space in that we pre-compute it all (and possible less).
 
 # Q5 8.20
 
