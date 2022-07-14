@@ -7,7 +7,7 @@
 
 int debug = 0;
 
-int extract_data(char *file_name, BIGNUM **r, BIGNUM **s, BIGNUM *h)
+int extract_data(char *file_name, const BIGNUM **r, const BIGNUM **s, BIGNUM *h)
 {
 
     FILE *hashfile, *sigfile;
@@ -65,6 +65,8 @@ int extract_data(char *file_name, BIGNUM **r, BIGNUM **s, BIGNUM *h)
         printf("r %s\n", BN_bn2hex(*r));
         printf("s %s\n", BN_bn2hex(*s));
     }
+
+    return 0;
 }
 
 int main(int argc, char *argv[])
@@ -235,5 +237,6 @@ int main(int argc, char *argv[])
     DSA_set0_key(d2, y2, private_key);
 
     privfile = fopen("../out/fake_private.pem", "w+");
+
     PEM_write_DSAPrivateKey(privfile, d2, NULL, NULL, 0, NULL, NULL);
 }
