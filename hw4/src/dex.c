@@ -2,6 +2,10 @@
 #include <openssl/dsa.h>
 #include <openssl/pem.h>
 #include <openssl/err.h>
+#include <openssl/evp.h>
+#include <openssl/decoder.h>
+#include <openssl/encoder.h>
+#include <openssl/param_build.h>
 
 #define BLEN 100
 
@@ -85,7 +89,7 @@ int main(int argc, char *argv[])
     }
 
     FILE *pubfile;
-    const BIGNUM *p, *q, *g, *y;
+    BIGNUM *p = BN_new(), *q = BN_new(), *g = BN_new(), *y = BN_new();
     DSA *d;
 
     char *pub_file_name = argv[1];
@@ -105,9 +109,26 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    d = PEM_read_DSA_PUBKEY(pubfile, NULL, NULL, NULL);
-    DSA_get0_pqg(d, &p, &q, &g);
-    DSA_get0_key(d, &y, NULL);
+    OSSL_DECODER_CTX *dctx;
+    EVP_PKEY *pkey = NULL;
+    const char *format = "PEM";   /* NULL for any format */
+    const char *structure = NULL; /* any structure */
+    const char *keytype = "DSA";  /* NULL for any key */
+
+    dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, format, structure,
+                                         keytype,
+                                         0,
+                                         NULL, NULL);
+
+    if (!OSSL_DECODER_from_fp(dctx, pubfile))
+    {
+        printf("Error decoding...\n");
+        exit(-1);
+    }
+    EVP_PKEY_get_bn_param(pkey, "p", &p);
+    EVP_PKEY_get_bn_param(pkey, "q", &q);
+    EVP_PKEY_get_bn_param(pkey, "g", &g);
+    EVP_PKEY_get_bn_param(pkey, "pub", &y);
 
     if (debug == 1)
     {
@@ -120,7 +141,7 @@ int main(int argc, char *argv[])
     char *file_name1 = argv[2];
     char *file_name2 = argv[3];
 
-    BIGNUM *r1, *s1, *r2, *s2;
+    const BIGNUM *r1, *s1, *r2, *s2;
     BIGNUM *h1 = BN_new();
     BIGNUM *h2 = BN_new();
 
@@ -224,19 +245,67 @@ int main(int argc, char *argv[])
     }
     // Now we will verify the private key...
 
-    DSA *d2 = DSA_new();
-    BIGNUM *p2, *q2, *g2, *y2;
     FILE *privfile;
 
-    p2 = BN_dup(p);
-    q2 = BN_dup(q);
-    g2 = BN_dup(g);
-    y2 = BN_dup(y);
+    EVP_PKEY *d2 = NULL;
 
-    DSA_set0_pqg(d2, p2, q2, g2);
-    DSA_set0_key(d2, y2, private_key);
+    OSSL_PARAM_BLD *param_bld = OSSL_PARAM_BLD_new();
+
+    OSSL_PARAM_BLD_push_BN(param_bld, "p", p);
+    OSSL_PARAM_BLD_push_BN(param_bld, "q", q);
+    OSSL_PARAM_BLD_push_BN(param_bld, "g", g);
+    OSSL_PARAM_BLD_push_BN(param_bld, "pub", y);
+    OSSL_PARAM_BLD_push_BN(param_bld, "priv", private_key);
+
+    EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_from_pkey(NULL, pkey, NULL);
+    EVP_PKEY_paramgen_init(pctx);
+
+    const OSSL_PARAM *params = EVP_PKEY_gettable_params(pkey);
+    int i = 0;
+    while (1)
+    {
+
+        OSSL_PARAM param = params[i];
+        if (strcmp(param.key, "priv") == 0)
+        {
+            param.data = private_key;
+            break;
+        }
+        i++;
+    }
+
+    // SEG fault on this line...
+    EVP_PKEY_CTX_set_params(pctx, params);
+    EVP_PKEY_generate(pctx, &d2);
+
+    BIGNUM *bg = BN_new();
+    EVP_PKEY_get_bn_param(d2, "priv", &bg);
+    printf("1private key: %s\n", BN_bn2hex(bg));
+    // if (EVP_PKEY_fromdata(pctx, &d2, EVP_PKEY_KEYPAIR, OSSL_PARAM_BLD_to_param(param_bld)) <= 0)
+    // {
+    //     printf("There was an error... %s\n", ERR_error_string(ERR_get_error(), NULL));
+    // }
 
     privfile = fopen("../out/fake_private.pem", "w+");
 
-    PEM_write_DSAPrivateKey(privfile, d2, NULL, NULL, 0, NULL, NULL);
+    OSSL_ENCODER_CTX *ectx = OSSL_ENCODER_CTX_new_for_pkey(d2,
+                                                           EVP_PKEY_KEYPAIR,
+                                                           format, "PrivateKeyInfo",
+                                                           NULL);
+    if (ectx == NULL)
+    {
+        /* error: no suitable potential encoders found */
+    }
+    if (OSSL_ENCODER_to_fp(ectx, privfile))
+    {
+        /* pkey was successfully encoded into the bio */
+        fclose(privfile);
+        printf("Done!");
+    }
+    else
+    {
+        /* encoding failure */
+        printf("There was an error... %s\n", ERR_error_string(ERR_get_error(), NULL));
+    }
+    OSSL_ENCODER_CTX_free(ectx);
 }
