@@ -2,7 +2,7 @@
 
 > Design a protocol based on Protocol 1 in Section 9.3.2 which, in addition to the existing protocol goals, also allows Alice to confirm Bob is still alive.
 
-Considering the original protocol is meant to indicate that Bob is alive. We can simply double the protocol, and maybe try to truncate it a little bit for efficiency.
+Considering the original protocol is meant to indicate that Alice is alive. We can simply double the protocol, and maybe try to truncate it a little bit for efficiency.
 
 A naive approach would be to simply "double" the protocol:
 
@@ -133,9 +133,9 @@ UKPT schemes offer support for key management in special application environment
 
 4. Suggest some key management controls designed to overcome the 'weakness of these two UKPT schemes.
 
-   - Racal suffers from synchronization issues - in order to remove the synchronization problem we could the dependency on card data, and add a dependency on a nonce sent by the host. Then each key register is dependent on the previous key register and the nonce from the host. To fix an issue then from a communication delay, the host could keep track of two of the key registers. If the register didn't get updated by the terminal, then it should make sense with the old register, so try and send a new nonce and calculate a new register. If it makes sense with the new register, expire the old one and move on. This maintains the positive property of Racal (and the negation of which that is a downside of Derived) which makes calculating future keys difficult, because an attacker doesn't know what the nonces will be.
+   - Racal suffers from synchronization issues - in order to remove the synchronization problem we could remove the dependency on card data, and add a dependency on a nonce sent by the host. Then each key register is dependent on the previous key register and the nonce from the host. To fix an issue then from a communication delay, the host could keep track of two of the key registers. If the register didn't get updated by the terminal, then it should make sense with the old register, so try and send a new nonce and calculate a new register. If it makes sense with the new register, expire the old one and move on. This maintains the positive property of Racal (and the negation of which that is a downside of Derived) which makes calculating future keys difficult, because an attacker doesn't know what the nonces will be.
 
-# Q7 10.7
+# Q6 10.7
 
 Quantum key establishment technology is at a relatively early stage of maturity. Explore the 'state of the art' in quantum key establishment by finding out the following:
 
@@ -173,7 +173,7 @@ ID Quantique (Geneva), MagiQ Technologies, Inc. (New York), QNu Labs (Bengaluru,
 
 * https://en.wikipedia.org/wiki/Quantum_key_distribution#Commercial
 
-# Q8
+# Q7
 
 1. For Protocol 1 and Protocol 3 in Chapter 9, write down (in English prose) the initial assumptions of each party, and what each believes after receiving each message.
 
@@ -186,25 +186,27 @@ ID Quantique (Geneva), MagiQ Technologies, Inc. (New York), QNu Labs (Bengaluru,
          1. Alice believes the message came from Bob.
       3. After Message #2
          1. Bob believes Alice is alive and active.
+         2. Bob believes that Alice responded to his message.
    2. Protocol 3 is the same.
 
 2) Translate part A into terms of BAN-style logic. (If BAN doesn't say what you need it to, then define your own modifications)
 
-3. Assumptions
-   1. $B \mid\mkern-3mu\Rightarrow$ a source of randomness
-   2. $A  \mid\mkern-3mu\equiv A \leftrightarrow^{k} B$
-   3. $B  \mid\mkern-3mu\equiv A \leftrightarrow^{k} B$
-   4. $A \leftrightarrow_{MAC} B$ (This means they share an algorithm)
-4. After Message #1
-   1. $A \mid\mkern-3mu\equiv (B \mid\mkern-3mu\sim M_1)$
-5. After Message #2
-   1. $B \mid\mkern-3mu\equiv (A \mid\mkern-3mu\sim M_2 \land \#(M_2))$
-   2. $B \mid\mkern-3mu\equiv M_2 \mid\mkern-3mu\rightarrow B$ This means that B believes M_2 was intended for B.
+   1. Assumptions
+      1. $B \mid\mkern-3mu\Rightarrow$ a source of randomness
+      2. $A  \mid\mkern-3mu\equiv A \leftrightarrow^{k} B$
+      3. $B  \mid\mkern-3mu\equiv A \leftrightarrow^{k} B$
+      4. $A \leftrightarrow_{MAC} B$ (This means they share an algorithm)
+   2. After Message #1
+      1. $A \mid\mkern-3mu\equiv (B \mid\mkern-3mu\sim M_1)$
+   3. After Message #2
 
-6) What sort of BAN-style inference rules would make it reasonable for Bob's conclusion at the end of Protocol 1 to be correct?
+      1. $B \mid\mkern-3mu\equiv (A \mid\mkern-3mu\sim M_2 \land \#(M_2))$
+      2. $B \mid\mkern-3mu\equiv M_2 \mid\mkern-3mu\rightarrow B$ This means that B believes M_2 was intended for B.
+
+3. What sort of BAN-style inference rules would make it reasonable for Bob's conclusion at the end of Protocol 1 to be correct?
 
 $$\frac{B \mid\mkern-3mu\equiv \#(M_2) \land B \mid\mkern-3mu\equiv A \mid\mkern-3mu\sim M_2}{B \mid\mkern-3mu\equiv A \mid\mkern-3mu\equiv M_2}$$
 
-1. Why doesn't that work for Protocol 3?
+4. Why doesn't that work for Protocol 3?
 
 This doesn't work for protocol 3 because we don't have verification that $A \mid\mkern-3mu\sim M_2$. Another way of writing this in this protocol (since Alice and Bob are trustworthy actors), is that $M_2$ _was intended for_ Bob. And we don't get this in protocol 3 because the recipients name is not part of the MAC.
