@@ -22,6 +22,9 @@
 #include <openssl/err.h>
 #include <openssl/rand.h>
 #include <openssl/rsa.h>
+#include <openssl/pem.h>
+#include <openssl/decoder.h>
+#include <openssl/evp.h>
 
 // permanent globals, for keypair information
 BIGNUM *N, *E, *D;
@@ -72,12 +75,36 @@ BIGNUM *s1_g, *s2_g;
 // set up the globals
 void key_setup()
 {
+    FILE *pemfile;
 
-#include "key.h"
+    pemfile = fopen("key.pem", "r+");
 
-    N = BN_bin2bn(n, sizeof(n) - 1, NULL);
-    E = BN_bin2bn(e, sizeof(e) - 1, NULL);
-    D = BN_bin2bn(d, sizeof(d) - 1, NULL);
+    OSSL_DECODER_CTX *dctx;
+    EVP_PKEY *pkey = NULL;
+    const char *format = "PEM";   /* NULL for any format */
+    const char *structure = NULL; /* any structure */
+    const char *keytype = "RSA";  /* NULL for any key */
+
+    dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, format, structure,
+                                         keytype,
+                                         OSSL_KEYMGMT_SELECT_KEYPAIR,
+                                         NULL, NULL);
+    if (dctx == NULL)
+    {
+        printf("/* error: no suitable potential decoders found */\n");
+    }
+    if (OSSL_DECODER_from_fp(dctx, pemfile))
+    {
+
+        EVP_PKEY_get_bn_param(pkey, "n", &N);
+        printf("Modulus: %s\n", BN_bn2hex(N));
+
+        EVP_PKEY_get_bn_param(pkey, "e", &E);
+        printf("Public Exponent: %s\n", BN_bn2hex(E));
+
+        EVP_PKEY_get_bn_param(pkey, "d", &D);
+        printf("Private Exponent: %s\n", BN_bn2hex(D));
+    }
 
     ctx_g = BN_CTX_new();
     s1_g = BN_new();
