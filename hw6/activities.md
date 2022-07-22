@@ -39,19 +39,26 @@ Note:
 sites that are intentionally configured this way (like badssl) in order to test browsers don't count
 yes...in class, we did visit an expired site...
 
-# TODO: Not sure how to find these... maybe I'll see in lecture
+I found all of these using www.ssllabs.com/ssltest
+
+- https://affashionhouse.com/
+
+  - This has a self-signed certificate
+
+- http://www.techats.com/
+  - Doesn't appear to have a certificate (or just isn't trusted by Chrome)
 
 # Q3 10.5
 
 For each of the following, give an example (with justification) of an application of cryptography where it might make sense to deploy.
 
 1. A flat key hierarchy with just one level.
-   1. A simple chatroom with not too many people active at any given time. Having an HSM, or another tier might not be worth the investment for a developer. Especially if the developer whats the chatroom network to generate
+   1. A simple chatroom with not too many people active at any given time. Having an HSM, or another tier might not be worth the investment for a developer. Especially if the developer wants the chatroom network to be ad-hoc.
 2. A two-level key hierarchy
    1. An example of a good two-level hierarchy might be a larger network chat-system such as whatsapp that also wants strict peer to peer communication, but doesn't want to generate keys on each device for performance issues. There might be a KC (key center) that generates and distributes keys, or handles message translation (I believe whatsapp probably goes with the former.)
    2. Would be interesting to read more into their actual encryption process [here](https://scontent-sea1-1.xx.fbcdn.net/v/t39.8562-6/271639644_1080641699441889_2201546141855802968_n.pdf?_nc_cat=108&ccb=1-7&_nc_sid=ad8a9d&_nc_ohc=cyr6x-PanboAX_BT0aj&_nc_ht=scontent-sea1-1.xx&oh=00_AT82rCgzYC_URiCCE7OiEG0q60GLX122Sadl4pE4ZC6f8w&oe=62D6AC7D)
 3. A three-level key hierarchy
-   1. Potentially in a military setting, when keys are of the utmost important importance to be kept secret, and an HSM can hold master keys in a very secret setting. I.e. where the system has the means to hold a specialized machine in a controlled environment, and then wants to distribute keys from there. Even if the system is large, the size if justified by the need for security, backups, and protection of keys.
+   1. Potentially in a military setting, when keys are incredible sensitive, and an HSM can hold master keys in a very secret setting. I.e. where the system has the means to hold a specialized machine in a controlled environment, and then wants to distribute keys from there. Even if the system is large, the size if justified by the need for security, backups, and protection of keys.
 
 # Q4 10.9
 
@@ -59,7 +66,7 @@ Key backup is an important part of the cryptographic key lifecycle
 
 1. Why is it important to backup cryptographic keys?
 
-It is important to backup keys for several reasons. First, because keys can get lost, or destroyed by adversaries. If this happens, and there is no backup of the key, then all data encrypted under that key can longer be decrypted. Another reason might be to audit current keys. By having a backup of the key in another system, it's possible for an organization to run internal audits of their own cryptographic keys/ciphertexts to determine whether their system is secure or not.
+It is important to backup keys for several reasons. First, because keys can get lost, or destroyed by adversaries. If this happens, and there is no backup of the key, then all data encrypted under that key can longer be decrypted, and has been lost. Another reason might be to audit current keys. By having a backup of the key in another system, it's possible for an organization to run internal audits of their own cryptographic keys/ciphertexts to determine whether their system is secure or not, without impacting the system that actually uses those keys.
 
 1. In what ways might backup of cryptographic keys differ from backup of more general data on a computer system?
 
@@ -83,9 +90,15 @@ The key separation is enforced here by the 80-byte value who's components are us
 
 1. "abuses" the principle of key separation (justify why, if possible)
 
+> Note at first I thought this mean "abuses" the presense of key separation...
+
 More keys might make it easier to find one, if the probability of finding a key is $1/p$, and you have $n$ keys, the probability of finding at least one key is $\frac{n}{k}$. Maybe...
 
 Similar to the example with the HSM, if an attacker could compromise the labeling method that labels keys for their individual uses, then the attacker, without knowing the key, could get it to be used for something other than it was intended for. This might provide the attacker with more knowledge of the key, or use a strong key for algorithm X on algorithm Y for which it is very weak.
+
+> Then I read piazza and it said it's actually "abuses" the lack of key separation...
+
+If keys are not separated, then more information regarding a key could be leaked through its repeated use in different cryptographic primitives. For example, say we use an RSA private key (which we know is a prime), also as a DSA key. While knowing $K$ is prime doesn't help us in RSA, it might cut down the search space, or allow for more precise cryptanalysis methods on DSA.
 
 # Q6 11.8
 
@@ -104,6 +117,9 @@ Looking at DigitCert
    4. key type (typically RSA),
    5. and key size (2048-bit minimum).
    6. (This is the same stuff that openssl asks for when generating & signing keys)
+   7. website URL
+      1. wildcard URLs
+   8. "Server app details for the host you install the certificate on"
 3. what liability they accept for these different levels of public-key cert.
    1. $1.25M, $1.75M, \$2M of warranty on the website (they don't really say what this warranty is for though...) I imagine it's damages if there are security breaches.
 4. how often they publish cert revocation lists
@@ -137,8 +153,10 @@ Bob could hand Alice his public key when they meet next. Since they know and tru
 
 2. alice and bob are remote business partners
 
-Since Alice and Bob are business partners, they likely trust the same businesses. Bob could utilize this business connection to share the public key. The business could act almost as a certificate management system. If we trust messages that are sent securely through the business channels, then Bob could easily share his public key through that business channel (secure business email), the assumption is that the business channel is secure to the business, but not secure to the individuals. By sharing the public key through this channel it is almost certainly coming from Bob (since we trust the business and it's actors), then Alice and Bob can use the public key on another channel to communicate. Technically the business would be able to listen in if they read their employee's emails, but since we trust the business, we believe they do not have intentions of doing this.
+Since Alice and Bob are business partners, they likely trust the same businesses. Bob could utilize this business connection to share the public key. The business could act almost as a certificate management system. If we trust messages that are sent securely through the business channels, then Bob could easily share his public key through that business channel (secure business email), the assumption is that the business channel is secure to the business, but not secure to the individuals. By sharing the public key through this channel it is almost certainly coming from Bob (since we trust the business and it's actors), then Alice and Bob can use the public key on another channel to communicate.
 
-3. alice and bob are strangers
+1. alice and bob are strangers
 
-Sounds like craigslist. Schedule a meetup.
+Sounds like craigslist...
+
+This is really a CA-free certification model (since in the other cases they at least have some turst already between the two parties). In this case though there is no initial trust. In this case, Bob can self-sign the certificate, and maybe send along some other information that might help alice make an informed decision to trust bob (linkedIn link, resume, note from a co-worker, etc.) Then alice can make an informed decision to trust this public key (and it's purpose). To check the public key (and it's purpose) before sending anything too secure. Alice could test Bob by sending a nonce to him encrypted under his public key. If he properly decrypts it, and shares in response the nonce, then he has access to the private key for the key he gave to Alice. Then they can continue.
